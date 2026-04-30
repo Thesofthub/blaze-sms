@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Blaze SMS — Telnyx Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0e11;--bg2:#13151a;--bg3:#1a1d24;--bg4:#21252e;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#e8e6df;--muted:#6b6e7a;
+  --accent:#ff5c2b;--accent2:#ff8255;
+  --green:#2ecc8a;--amber:#f0a030;--red:#ff4757;--blue:#4a8fff;
+  --font:'Syne',sans-serif;--mono:'DM Mono',monospace;
+  --radius:10px;--sidebar:260px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;min-height:100vh;display:flex;overflow:hidden}
+.sidebar{width:var(--sidebar);min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.logo{padding:28px 24px 24px;border-bottom:1px solid var(--border)}
+.logo-mark{display:flex;align-items:center;gap:10px}
+.logo-icon{width:34px;height:34px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0}
+.logo-text{font-size:18px;font-weight:800;letter-spacing:-0.3px}
+.logo-sub{font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--mono);letter-spacing:0.5px}
+nav{flex:1;padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius);cursor:pointer;font-size:14px;font-weight:600;color:var(--muted);transition:all 0.15s;border:1px solid transparent;user-select:none}
+.nav-item:hover{color:var(--text);background:var(--bg3)}
+.nav-item.active{color:var(--accent);background:rgba(255,92,43,0.08);border-color:rgba(255,92,43,0.15)}
+.nav-icon{font-size:18px;width:20px;text-align:center}
+.sidebar-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.status-dot{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-family:var(--mono)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green)}
+.dot.warn{background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.dot.off{background:var(--red);box-shadow:0 0 6px var(--red)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{padding:20px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg2);flex-shrink:0}
+.page-title{font-size:20px;font-weight:800;letter-spacing:-0.3px}
+.topbar-actions{display:flex;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all 0.15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-1px)}
+.btn-ghost{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--bg4)}
+.btn-danger{background:rgba(255,71,87,0.12);color:var(--red);border:1px solid rgba(255,71,87,0.2)}
+.btn-danger:hover{background:rgba(255,71,87,0.2)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.content{flex:1;overflow-y:auto;padding:28px 32px}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.page{display:none}.page.active{display:block}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:20px 22px}
+.stat-label{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.stat-value{font-size:32px;font-weight:800;line-height:1;letter-spacing:-1px}
+.stat-value.accent{color:var(--accent)}.stat-value.green{color:var(--green)}.stat-value.blue{color:var(--blue)}.stat-value.amber{color:var(--amber)}
+.card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.card-header{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:14px;font-weight:700}
+.card-body{padding:22px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.compose-form{display:flex;flex-direction:column;gap:16px}
+.field-group{display:flex;flex-direction:column;gap:6px}
+label{font-size:12px;font-weight:600;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.8px}
+input,select,textarea{background:var(--bg4);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:var(--font);font-size:14px;padding:11px 14px;outline:none;transition:border-color 0.15s;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:100px;line-height:1.6}
+select option{background:var(--bg4)}
+.char-count{font-size:11px;font-family:var(--mono);color:var(--muted);text-align:right;margin-top:-4px}
+.msg-table{width:100%;border-collapse:collapse}
+.msg-table th{text-align:left;padding:12px 16px;font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border)}
+.msg-table td{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;vertical-align:middle}
+.msg-table tr:hover td{background:rgba(255,255,255,0.02)}
+.msg-text{max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--mono);font-size:12px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;font-family:var(--mono)}
+.badge-in{background:rgba(74,143,255,0.12);color:var(--blue)}
+.badge-out{background:rgba(255,92,43,0.10);color:var(--accent)}
+.badge-auto{background:rgba(46,204,138,0.10);color:var(--green)}
+.badge-delivered{background:rgba(46,204,138,0.10);color:var(--green)}
+.badge-sent{background:rgba(240,160,48,0.10);color:var(--amber)}
+.badge-queued{background:rgba(107,110,122,0.15);color:var(--muted)}
+.badge-failed{background:rgba(255,71,87,0.12);color:var(--red)}
+.badge-received{background:rgba(74,143,255,0.12);color:var(--blue)}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;font-family:var(--mono);background:var(--bg4);color:var(--muted);border:1px solid var(--border);margin-right:4px}
+.contacts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.contact-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;transition:border-color 0.15s}
+.contact-card:hover{border-color:var(--border2)}
+.contact-avatar{width:42px;height:42px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fff;flex-shrink:0}
+.contact-name{font-size:15px;font-weight:700;margin-bottom:3px}
+.contact-phone{font-size:12px;font-family:var(--mono);color:var(--muted)}
+.contact-actions{display:flex;gap:8px}
+.rule-row{display:flex;align-items:flex-start;gap:16px;padding:16px;background:var(--bg4);border:1px solid var(--border);border-radius:10px;margin-bottom:10px}
+.rule-trigger{background:rgba(255,92,43,0.1);color:var(--accent);border:1px solid rgba(255,92,43,0.2);border-radius:6px;padding:4px 12px;font-family:var(--mono);font-size:13px;font-weight:500;flex-shrink:0;min-width:80px;text-align:center}
+.rule-body{flex:1}
+.rule-response{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.5}
+.rule-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.toggle{position:relative;display:inline-block;width:40px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--bg4);border:1px solid var(--border2);border-radius:22px;transition:0.2s}
+.toggle-slider:before{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:var(--muted);left:2px;bottom:2px;transition:0.2s}
+.toggle input:checked + .toggle-slider{background:rgba(46,204,138,0.15);border-color:var(--green)}
+.toggle input:checked + .toggle-slider:before{transform:translateX(18px);background:var(--green)}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:center;justify-content:center}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--bg3);border:1px solid var(--border2);border-radius:16px;width:480px;max-width:95vw;padding:28px;display:flex;flex-direction:column;gap:20px;animation:modalIn 0.2s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(0.96) translateY(8px)}}
+.modal-title{font-size:18px;font-weight:800}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:4px}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);font-family:var(--mono)}
+.empty-icon{font-size:40px;margin-bottom:12px}
+.empty-text{font-size:13px}
+.toast-container{position:fixed;bottom:28px;right:28px;display:flex;flex-direction:column;gap:8px;z-index:200}
+.toast{background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px 18px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;animation:toastIn 0.25s ease;min-width:240px}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px) scale(0.97)}}
+.toast.success{border-color:rgba(46,204,138,0.25);background:rgba(46,204,138,0.06)}
+.toast.error{border-color:rgba(255,71,87,0.25);background:rgba(255,71,87,0.06)}
+.spinner{width:16px;height:16px;border-radius:50%;border:2px solid var(--border2);border-top-color:var(--accent);animation:spin 0.7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.chat-layout{display:flex;gap:20px;height:calc(100vh - 200px)}
+.chat-list{width:280px;flex-shrink:0;background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow-y:auto}
+.chat-list::-webkit-scrollbar{width:3px}
+.chat-list::-webkit-scrollbar-thumb{background:var(--border2)}
+.chat-item{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s}
+.chat-item:hover{background:var(--bg4)}
+.chat-item.active{background:rgba(255,92,43,0.06);border-left:2px solid var(--accent)}
+.chat-item-name{font-size:13px;font-weight:700;margin-bottom:3px}
+.chat-item-preview{font-size:11px;font-family:var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat-window{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;overflow:hidden}
+.chat-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
+.chat-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px}
+.chat-messages::-webkit-scrollbar{width:3px}
+.chat-messages::-webkit-scrollbar-thumb{background:var(--border2)}
+.bubble-row{display:flex;gap:10px}
+.bubble-row.out{flex-direction:row-reverse}
+.bubble{max-width:65%;padding:11px 15px;border-radius:14px;font-size:13px;line-height:1.6}
+.bubble.in{background:var(--bg4);border:1px solid var(--border);border-radius:14px 14px 14px 4px}
+.bubble.out{background:var(--accent);color:#fff;border-radius:14px 14px 4px 14px}
+.bubble.auto-reply{background:rgba(46,204,138,0.12);border:1px solid rgba(46,204,138,0.2);color:var(--green);border-radius:14px 14px 4px 14px}
+.bubble-time{font-size:10px;font-family:var(--mono);color:var(--muted);margin-top:4px;padding:0 2px}
+.chat-compose{padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:flex-end}
+.chat-compose textarea{min-height:44px;max-height:120px;padding:10px 14px;resize:none}
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">
+      <div class="logo-icon">B</div>
+      <div>
+        <div class="logo-text">Blaze SMS</div>
+      </div>
+    </div>
+    <div class="logo-sub">Telnyx · Netlify · Supabase</div>
+  </div>
+  <nav>
+    <div class="nav-item active" data-page="dashboard"><span class="nav-icon">◈</span> Dashboard</div>
+    <div class="nav-item" data-page="compose"><span class="nav-icon">✦</span> Compose</div>
+    <div class="nav-item" data-page="messages"><span class="nav-icon">≡</span> Messages</div>
+    <div class="nav-item" data-page="conversations"><span class="nav-icon">◎</span> Conversations</div>
+    <div class="nav-item" data-page="contacts"><span class="nav-icon">⊞</span> Contacts</div>
+    <div class="nav-item" data-page="autoreplies"><span class="nav-icon">⟳</span> Auto-Replies</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="status-dot"><div class="dot" id="api-dot"></div><span id="api-status">Connecting...</span></div>
+    <div class="status-dot"><div class="dot" id="db-dot"></div><span id="db-status">Supabase</span></div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Dashboard</div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost btn-sm" onclick="refreshAll()">↻ Refresh</button>
+      <button class="btn btn-primary btn-sm" onclick="navigate('compose')">+ New SMS</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Sent</div><div class="stat-value accent" id="stat-sent">—</div></div>
+        <div class="stat-card"><div class="stat-label">Received</div><div class="stat-value blue" id="stat-received">—</div></div>
+        <div class="stat-card"><div class="stat-label">Auto-Replied</div><div class="stat-value green" id="stat-auto">—</div></div>
+        <div class="stat-card"><div class="stat-label">Contacts</div><div class="stat-value amber" id="stat-contacts">—</div></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Recent Messages</div><button class="btn btn-ghost btn-sm" onclick="navigate('messages')">View all</button></div>
+          <div class="card-body" style="padding:0">
+            <table class="msg-table">
+              <thead><tr><th>Contact</th><th>Message</th><th>Status</th></tr></thead>
+              <tbody id="recent-messages"><tr><td colspan="3"><div class="empty"><div class="empty-icon">◈</div><div class="empty-text">Loading...</div></div></td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Quick Compose</div></div>
+          <div class="card-body">
+            <div class="compose-form">
+              <div class="field-group"><label>To</label><select id="quick-to"><option value="">Select contact...</option></select></div>
+              <div class="field-group"><label>Message</label><textarea id="quick-text" placeholder="Type your message..." oninput="updateCharCount('quick-text','quick-chars')"></textarea><div class="char-count" id="quick-chars">0 / 160</div></div>
+              <button class="btn btn-primary" onclick="quickSend()">Send SMS →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPOSE -->
+    <div class="page" id="page-compose">
+      <div class="card" style="max-width:600px">
+        <div class="card-header"><div class="card-title">New Message</div></div>
+        <div class="card-body">
+          <div class="compose-form">
+            <div class="field-group"><label>To — Contact</label><select id="compose-contact" onchange="fillPhone()"><option value="">Choose a contact...</option></select></div>
+            <div class="field-group"><label>Or enter phone number</label><input type="tel" id="compose-phone" placeholder="+13105550101"/></div>
+            <div class="field-group"><label>Message</label><textarea id="compose-text" placeholder="Write your message..." oninput="updateCharCount('compose-text','compose-chars')"></textarea><div class="char-count" id="compose-chars">0 / 160</div></div>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-primary" onclick="sendSMS()" style="flex:1" id="send-btn">Send SMS →</button>
+              <button class="btn btn-ghost" onclick="clearCompose()">Clear</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="page" id="page-messages">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">All Messages</div>
+          <select id="msg-filter" onchange="renderMessages()" style="width:auto;padding:7px 12px;font-size:12px">
+            <option value="">All</option><option value="inbound">Inbound</option><option value="outbound">Outbound</option>
+          </select>
+        </div>
+        <div class="card-body" style="padding:0">
+          <table class="msg-table">
+            <thead><tr><th>Direction</th><th>From</th><th>To</th><th>Message</th><th>Status</th><th>Time</th></tr></thead>
+            <tbody id="all-messages"><tr><td colspan="6"><div class="empty"><div class="empty-icon">≡</div><div class="empty-text">Loading...</div></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONVERSATIONS -->
+    <div class="page" id="page-conversations">
+      <div class="chat-layout">
+        <div class="chat-list" id="chat-list"><div class="empty" style="padding:40px 20px"><div class="empty-icon">◎</div><div class="empty-text">No conversations</div></div></div>
+        <div class="chat-window">
+          <div class="chat-header">
+            <div>
+              <div style="font-weight:700;font-size:15px" id="chat-name">Select a conversation</div>
+              <div style="font-size:11px;font-family:var(--mono);color:var(--muted)" id="chat-phone"></div>
+            </div>
+          </div>
+          <div class="chat-messages" id="chat-messages"><div class="empty"><div class="empty-icon">◎</div><div class="empty-text">Pick a conversation</div></div></div>
+          <div class="chat-compose">
+            <textarea id="chat-input" placeholder="Reply..." rows="1" oninput="autoResize(this)" onkeydown="chatEnter(event)"></textarea>
+            <button class="btn btn-primary" onclick="sendChatReply()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTACTS -->
+    <div class="page" id="page-contacts">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:20px">
+        <button class="btn btn-primary" onclick="openContactModal()">+ Add Contact</button>
+      </div>
+      <div class="contacts-grid" id="contacts-grid"><div class="empty" style="grid-column:1/-1"><div class="empty-icon">⊞</div><div class="empty-text">Loading...</div></div></div>
+    </div>
+
+    <!-- AUTO-REPLIES -->
+    <div class="page" id="page-autoreplies">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div style="font-size:13px;color:var(--muted);font-family:var(--mono)">Exact keyword match — case-insensitive</div>
+        <button class="btn btn-primary" onclick="openRuleModal()">+ Add Rule</button>
+      </div>
+      <div id="rules-list"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Contact Modal -->
+<div class="modal-backdrop" id="contact-modal">
+  <div class="modal">
+    <div class="modal-title" id="contact-modal-title">Add Contact</div>
+    <div class="field-group"><label>Name</label><input type="text" id="cm-name" placeholder="Jane Smith"/></div>
+    <div class="field-group"><label>Phone (E.164)</label><input type="tel" id="cm-phone" placeholder="+13105550101"/></div>
+    <div class="field-group"><label>Tags (comma-separated)</label><input type="text" id="cm-tags" placeholder="client, vip"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('contact-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveContact()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Auto-Reply Modal -->
+<div class="modal-backdrop" id="rule-modal">
+  <div class="modal">
+    <div class="modal-title">New Auto-Reply Rule</div>
+    <div class="field-group"><label>Trigger keyword</label><input type="text" id="rm-trigger" placeholder="YES"/></div>
+    <div class="field-group"><label>Auto-reply message</label><textarea id="rm-response" placeholder="Your response..." style="min-height:80px"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('rule-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRule()">Save Rule</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// On Netlify, API calls go to same-origin /.netlify/functions/
+// but our netlify.toml rewrites /api/* → /.netlify/functions/:splat
+const API = '';
+let state = { messages:[], contacts:[], rules:[], stats:{}, activeContact:null };
+
+const pageTitles = { dashboard:'Dashboard', compose:'Compose SMS', messages:'Message History', conversations:'Conversations', contacts:'Contacts', autoreplies:'Auto-Reply Rules' };
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.querySelector(`[data-page="${page}"]`).classList.add('active');
+  document.getElementById('page-title').textContent = pageTitles[page];
+  if (page==='dashboard')     renderDashboard();
+  if (page==='messages')      renderMessages();
+  if (page==='conversations') renderConversations();
+  if (page==='contacts')      renderContacts();
+  if (page==='autoreplies')   renderRules();
+  if (page==='compose')       populateContactSelects();
+}
+document.querySelectorAll('.nav-item').forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.page)));
+
+async function apiFetch(path, method='GET', body) {
+  const opts = { method, headers:{'Content-Type':'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API+path, opts);
+  return r.json();
+}
+
+async function loadAll() {
+  try {
+    const [msgs, contacts, rules, stats] = await Promise.all([
+      apiFetch('/api/messages'),
+      apiFetch('/api/contacts'),
+      apiFetch('/api/autoreplies'),
+      apiFetch('/api/stats'),
+    ]);
+    state.messages = msgs.messages || [];
+    state.contacts = contacts.contacts || [];
+    state.rules    = rules.rules || [];
+    state.stats    = stats;
+    document.getElementById('api-dot').className = 'dot';
+    document.getElementById('api-status').textContent = 'API Connected';
+    document.getElementById('db-dot').className = 'dot';
+    document.getElementById('db-status').textContent = 'Supabase OK';
+    populateContactSelects();
+    renderDashboard();
+  } catch(e) {
+    document.getElementById('api-dot').className = 'dot off';
+    document.getElementById('api-status').textContent = 'API Offline';
+    document.getElementById('db-dot').className = 'dot off';
+    document.getElementById('db-status').textContent = 'DB Offline';
+  }
+}
+
+async function refreshAll() { await loadAll(); toast('Refreshed','success'); }
+
+function renderDashboard() {
+  document.getElementById('stat-sent').textContent     = state.stats.sent     ?? '—';
+  document.getElementById('stat-received').textContent = state.stats.received  ?? '—';
+  document.getElementById('stat-auto').textContent     = state.stats.autoSent  ?? '—';
+  document.getElementById('stat-contacts').textContent = state.stats.contacts  ?? '—';
+  const recent = state.messages.slice(0,6);
+  const tbody = document.getElementById('recent-messages');
+  if (!recent.length) { tbody.innerHTML='<tr><td colspan="3"><div class="empty"><div class="empty-icon">◈</div><div class="empty-text">No messages yet</div></div></td></tr>'; return; }
+  tbody.innerHTML = recent.map(m=>`
+    <tr>
+      <td style="font-weight:600">${m.direction==='inbound'?esc(m.from_name):esc(m.to_name)}</td>
+      <td><div class="msg-text">${esc(m.text)}</div></td>
+      <td><span class="badge badge-${m.status}">${m.status}</span></td>
+    </tr>`).join('');
+}
+
+function renderMessages() {
+  const filter = document.getElementById('msg-filter').value;
+  const msgs = filter ? state.messages.filter(m=>m.direction===filter) : state.messages;
+  const tbody = document.getElementById('all-messages');
+  if (!msgs.length) { tbody.innerHTML='<tr><td colspan="6"><div class="empty"><div class="empty-icon">≡</div><div class="empty-text">No messages</div></div></td></tr>'; return; }
+  tbody.innerHTML = msgs.map(m=>`
+    <tr>
+      <td><span class="badge ${m.auto?'badge-auto':m.direction==='inbound'?'badge-in':'badge-out'}">${m.auto?'auto':m.direction}</span></td>
+      <td style="font-weight:600">${esc(m.from_name||m.from_phone)}</td>
+      <td style="color:var(--muted)">${esc(m.to_name||m.to_phone)}</td>
+      <td><div class="msg-text">${esc(m.text)}</div></td>
+      <td><span class="badge badge-${m.status}">${m.status}</span></td>
+      <td style="color:var(--muted);font-family:var(--mono);font-size:11px">${fmtTime(m.created_at)}</td>
+    </tr>`).join('');
+}
+
+function renderConversations() {
+  const threads = {};
+  state.messages.forEach(m=>{
+    const phone = m.direction==='inbound' ? m.from_phone : m.to_phone;
+    const name  = m.direction==='inbound' ? m.from_name  : m.to_name;
+    if (!threads[phone]) threads[phone]={phone,name,messages:[]};
+    threads[phone].messages.push(m);
+  });
+  const list = document.getElementById('chat-list');
+  const keys = Object.keys(threads);
+  if (!keys.length) { list.innerHTML='<div class="empty" style="padding:40px 20px"><div class="empty-icon">◎</div><div class="empty-text">No conversations</div></div>'; return; }
+  list.innerHTML = keys.map(phone=>{
+    const t=threads[phone], last=t.messages[t.messages.length-1];
+    return `<div class="chat-item ${state.activeContact===phone?'active':''}" onclick="openThread('${phone}','${esc(t.name)}')">
+      <div class="chat-item-name">${esc(t.name)}</div>
+      <div class="chat-item-preview">${esc(last.text)}</div>
+    </div>`;
+  }).join('');
+  if (state.activeContact && threads[state.activeContact]) renderThread(threads[state.activeContact]);
+}
+
+function openThread(phone, name) {
+  state.activeContact = phone;
+  document.getElementById('chat-name').textContent  = name;
+  document.getElementById('chat-phone').textContent = phone;
+  renderConversations();
+}
+
+function renderThread(thread) {
+  const el = document.getElementById('chat-messages');
+  el.innerHTML = thread.messages.map(m=>{
+    const isOut = m.direction==='outbound';
+    const cls = m.auto ? 'auto-reply' : isOut ? 'out' : 'in';
+    return `<div class="bubble-row ${isOut?'out':''}">
+      <div>
+        <div class="bubble ${cls}">${esc(m.text)}</div>
+        <div class="bubble-time">${fmtTime(m.created_at)}${m.auto?' · auto':''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function renderContacts() {
+  const grid = document.getElementById('contacts-grid');
+  if (!state.contacts.length) { grid.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-icon">⊞</div><div class="empty-text">No contacts</div></div>'; return; }
+  grid.innerHTML = state.contacts.map(c=>`
+    <div class="contact-card">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="contact-avatar">${c.name.charAt(0).toUpperCase()}</div>
+        <div><div class="contact-name">${esc(c.name)}</div><div class="contact-phone">${esc(c.phone)}</div></div>
+      </div>
+      <div>${(c.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+      <div class="contact-actions">
+        <button class="btn btn-ghost btn-sm" onclick="messageContact('${esc(c.phone)}')">Message</button>
+        <button class="btn btn-ghost btn-sm" onclick="editContact('${c.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteContact('${c.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function renderRules() {
+  const el = document.getElementById('rules-list');
+  if (!state.rules.length) { el.innerHTML='<div class="empty"><div class="empty-icon">⟳</div><div class="empty-text">No rules yet</div></div>'; return; }
+  el.innerHTML = state.rules.map(r=>`
+    <div class="rule-row">
+      <div class="rule-trigger">${esc(r.trigger)}</div>
+      <div class="rule-body">
+        <div style="font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:4px">TRIGGER → REPLY</div>
+        <div class="rule-response">${esc(r.response)}</div>
+      </div>
+      <div class="rule-actions">
+        <label class="toggle"><input type="checkbox" ${r.active?'checked':''} onchange="toggleRule('${r.id}',this.checked)"/><span class="toggle-slider"></span></label>
+        <button class="btn btn-danger btn-sm" onclick="deleteRule('${r.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+async function sendSMS() {
+  const phone = document.getElementById('compose-phone').value.trim();
+  const sel   = document.getElementById('compose-contact').value;
+  const to    = phone || sel;
+  const text  = document.getElementById('compose-text').value.trim();
+  if (!to)   return toast('Select a contact or enter a phone number','error');
+  if (!text) return toast('Message cannot be empty','error');
+  const btn = document.getElementById('send-btn');
+  btn.innerHTML = '<span class="spinner"></span> Sending...'; btn.disabled=true;
+  try {
+    const res = await apiFetch('/api/messages/send','POST',{to,text});
+    if (res.success) { state.messages.unshift(res.message); toast('Message sent!','success'); clearCompose(); }
+    else toast('Send failed: '+(res.error||'Unknown error'),'error');
+  } catch(e) { toast('Network error','error'); }
+  btn.innerHTML='Send SMS →'; btn.disabled=false;
+}
+
+async function quickSend() {
+  const to=document.getElementById('quick-to').value, text=document.getElementById('quick-text').value.trim();
+  if (!to)   return toast('Select a contact','error');
+  if (!text) return toast('Message cannot be empty','error');
+  const res = await apiFetch('/api/messages/send','POST',{to,text});
+  if (res.success) { state.messages.unshift(res.message); toast('Sent!','success'); document.getElementById('quick-text').value=''; renderDashboard(); }
+  else toast('Failed','error');
+}
+
+async function sendChatReply() {
+  const to=state.activeContact, text=document.getElementById('chat-input').value.trim();
+  if (!to||!text) return;
+  const res = await apiFetch('/api/messages/send','POST',{to,text});
+  if (res.success) { state.messages.push(res.message); document.getElementById('chat-input').value=''; renderConversations(); }
+}
+
+function chatEnter(e) { if (e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChatReply();} }
+
+let editingContactId=null;
+function openContactModal(id) {
+  editingContactId=id||null;
+  document.getElementById('contact-modal-title').textContent=id?'Edit Contact':'Add Contact';
+  if (id) { const c=state.contacts.find(c=>c.id===id); document.getElementById('cm-name').value=c.name; document.getElementById('cm-phone').value=c.phone; document.getElementById('cm-tags').value=(c.tags||[]).join(', '); }
+  else { document.getElementById('cm-name').value=''; document.getElementById('cm-phone').value=''; document.getElementById('cm-tags').value=''; }
+  document.getElementById('contact-modal').classList.add('open');
+}
+function editContact(id){openContactModal(id);}
+
+async function saveContact() {
+  const name=document.getElementById('cm-name').value.trim(), phone=document.getElementById('cm-phone').value.trim();
+  const tags=document.getElementById('cm-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  if (!name||!phone) return toast('Name and phone required','error');
+  if (editingContactId) {
+    const res=await apiFetch(`/api/contacts/${editingContactId}`,'PUT',{name,phone,tags});
+    if (res.success) { const idx=state.contacts.findIndex(c=>c.id===editingContactId); state.contacts[idx]=res.contact; toast('Updated','success'); }
+  } else {
+    const res=await apiFetch('/api/contacts','POST',{name,phone,tags});
+    if (res.success) { state.contacts.push(res.contact); toast('Contact added','success'); }
+  }
+  closeModal('contact-modal'); renderContacts(); populateContactSelects();
+}
+
+async function deleteContact(id) {
+  if (!confirm('Delete this contact?')) return;
+  await apiFetch(`/api/contacts/${id}`,'DELETE');
+  state.contacts=state.contacts.filter(c=>c.id!==id);
+  renderContacts(); populateContactSelects(); toast('Deleted','success');
+}
+
+function messageContact(phone) { document.getElementById('compose-phone').value=phone; navigate('compose'); }
+
+function openRuleModal() { document.getElementById('rm-trigger').value=''; document.getElementById('rm-response').value=''; document.getElementById('rule-modal').classList.add('open'); }
+
+async function saveRule() {
+  const trigger=document.getElementById('rm-trigger').value.trim(), response=document.getElementById('rm-response').value.trim();
+  if (!trigger||!response) return toast('Trigger and response required','error');
+  const res=await apiFetch('/api/autoreplies','POST',{trigger,response});
+  if (res.success){state.rules.push(res.rule);toast('Rule added','success');}
+  closeModal('rule-modal'); renderRules();
+}
+
+async function toggleRule(id, active) {
+  await apiFetch(`/api/autoreplies/${id}`,'PUT',{active});
+  const r=state.rules.find(r=>r.id===id); if(r)r.active=active;
+  toast(`Rule ${active?'enabled':'disabled'}`,'success');
+}
+
+async function deleteRule(id) {
+  await apiFetch(`/api/autoreplies/${id}`,'DELETE');
+  state.rules=state.rules.filter(r=>r.id!==id); renderRules(); toast('Deleted','success');
+}
+
+function populateContactSelects() {
+  const opts=state.contacts.map(c=>`<option value="${esc(c.phone)}">${esc(c.name)} — ${esc(c.phone)}</option>`).join('');
+  ['quick-to','compose-contact'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='<option value="">Select contact...</option>'+opts;});
+}
+
+function fillPhone() { document.getElementById('compose-phone').value=''; }
+function clearCompose() { ['compose-phone','compose-text'].forEach(id=>document.getElementById(id).value=''); document.getElementById('compose-contact').value=''; document.getElementById('compose-chars').textContent='0 / 160'; }
+function updateCharCount(tid,cid){const l=document.getElementById(tid).value.length;document.getElementById(cid).textContent=`${l} / 160`;}
+function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+function fmtTime(ts){if(!ts)return'';const d=new Date(ts);return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
+function esc(str){return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function toast(msg,type='success'){const el=document.createElement('div');el.className=`toast ${type}`;el.innerHTML=`<span>${type==='success'?'✓':'✕'}</span> ${msg}`;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),3500);}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-backdrop').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+setInterval(async()=>{
+  try {
+    const res=await apiFetch('/api/messages');
+    if(res.messages&&res.messages.length!==state.messages.length){
+      state.messages=res.messages;
+      const active=document.querySelector('.page.active')?.id?.replace('page-','');
+      if(active==='dashboard')renderDashboard();
+      if(active==='messages')renderMessages();
+      if(active==='conversations')renderConversations();
+    }
+  }catch(e){}
+}, 15000);
+
+loadAll();
+</script>
+</body>
+</html>

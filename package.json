@@ -1,0 +1,15 @@
+{
+  "name": "telnyx-sms-netlify",
+  "version": "1.0.0",
+  "description": "Telnyx SMS Platform on Netlify + Supabase",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.4",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.23.5"
+  }
+}
