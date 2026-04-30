@@ -1,19 +1,18 @@
-// netlify/functions/inbound.js
-// POST /webhook/inbound — receives inbound SMS from Telnyx, triggers auto-replies
-
 import { getSupabase, telnyxRequest, json } from './_shared.js';
 
 export async function handler(event) {
-  // Always return 200 immediately — Telnyx will retry if it doesn't get one
   if (event.httpMethod !== 'POST') {
     return { statusCode: 200, body: 'OK' };
   }
 
   try {
     const body = JSON.parse(event.body || '{}');
+    console.log('Webhook received:', JSON.stringify(body?.data?.event_type));
+    
     const { event_type, payload } = body?.data || {};
 
     if (event_type !== 'message.received') {
+      console.log('Ignoring event type:', event_type);
       return { statusCode: 200, body: 'OK' };
     }
 
@@ -21,19 +20,30 @@ export async function handler(event) {
     const toPhone   = payload?.to?.[0]?.phone_number;
     const text      = (payload?.text || '').trim();
 
-    if (!fromPhone || !text) return { statusCode: 200, body: 'OK' };
+    console.log(`Inbound SMS from ${fromPhone} to ${toPhone}: "${text}"`);
+
+    if (!fromPhone || !text) {
+      console.log('Missing fromPhone or text, skipping');
+      return { statusCode: 200, body: 'OK' };
+    }
 
     const db = getSupabase();
 
-    // Look up contact name
+    // Test Supabase connection
+    const { data: testData, error: testError } = await db
+      .from('messages')
+      .select('count')
+      .limit(1);
+    
+    console.log('Supabase connection test:', testError ? 'FAILED: ' + testError.message : 'OK');
+
     const { data: contact } = await db
       .from('contacts')
       .select('name')
       .eq('phone', fromPhone)
       .maybeSingle();
 
-    // Save inbound message
-    await db.from('messages').insert({
+    const insertPayload = {
       telnyx_id:  payload.id,
       direction:  'inbound',
       from_phone: fromPhone,
@@ -43,9 +53,22 @@ export async function handler(event) {
       text,
       status:     'received',
       auto:       false,
-    });
+    };
 
-    // Check for matching auto-reply rule (case-insensitive exact match)
+    console.log('Inserting message:', JSON.stringify(insertPayload));
+
+    const { data, error } = await db
+      .from('messages')
+      .insert(insertPayload)
+      .select();
+
+    if (error) {
+      console.error('Insert error:', JSON.stringify(error));
+    } else {
+      console.log('Message saved successfully:', JSON.stringify(data));
+    }
+
+    // Check for auto-reply
     const keyword = text.toUpperCase();
     const { data: rule } = await db
       .from('auto_replies')
@@ -55,14 +78,11 @@ export async function handler(event) {
       .maybeSingle();
 
     if (rule) {
-      // Send auto-reply via Telnyx
       await telnyxRequest('POST', '/messages', {
         from: toPhone,
         to:   fromPhone,
         text: rule.response,
       });
-
-      // Save auto-reply as outbound message
       await db.from('messages').insert({
         telnyx_id:  `auto-${Date.now()}`,
         direction:  'outbound',
@@ -74,12 +94,11 @@ export async function handler(event) {
         status:     'sent',
         auto:       true,
       });
-
-      console.log(`Auto-replied to ${fromPhone} — trigger: "${rule.trigger}"`);
+      console.log(`Auto-replied with trigger: "${rule.trigger}"`);
     }
+
   } catch (err) {
-    console.error('Webhook error:', err);
-    // Still return 200 so Telnyx doesn't keep retrying
+    console.error('Webhook error:', JSON.stringify(err));
   }
 
   return { statusCode: 200, body: 'OK' };
