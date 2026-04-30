@@ -1,13 +1,9 @@
-// netlify/functions/_shared.js
-// Shared Supabase client and Telnyx helper — imported by all functions
-
 import { createClient } from '@supabase/supabase-js';
 
 export function getSupabase() {
-  return createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY
-  );
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_KEY;
+  return createClient(url, key);
 }
 
 export async function telnyxRequest(method, path, body) {
